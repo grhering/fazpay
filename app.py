@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template_string, request, send_from_directory
 import os
 
 app = Flask(__name__)
@@ -21,35 +21,52 @@ TAXAS = {
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html>
+<html lang='pt-br'>
 <head>
-    <title>Calculadora de Taxas</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Calculadora de Taxas - FAZPAY</title>
 </head>
-<body>
-    <h1>Calculadora de Valor Recebido</h1>
-    <form method="POST">
-        <label>Valor total (R$):</label>
-        <input type="number" name="valor" step="0.01" required><br><br>
-
-        <label>Bandeira:</label>
-        <select name="bandeira">
-            <option value="Visa/Master">Visa/Master</option>
-            <option value="Demais Bandeiras">Demais Bandeiras</option>
-        </select><br><br>
-
-        <label>Forma de pagamento:</label>
-        <select name="forma_pagamento">
-            {% for forma in formas_pagamento %}
-                <option value="{{ forma }}">{{ forma }}</option>
-            {% endfor %}
-        </select><br><br>
-
-        <input type="submit" value="Calcular">
-    </form>
-
-    {% if resultado is not none %}
-        <h2>Você receberá: R$ {{ resultado }}</h2>
-    {% endif %}
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="text-center mb-4">
+            <img src="/logo" alt="Fazpay Logo" height="60">
+            <h2 class="mt-2">Calculadora de Taxas</h2>
+            <p class="text-muted">Simule quanto você vai receber ao passar um valor na máquina</p>
+        </div>
+        <div class="card mx-auto shadow p-4" style="max-width: 500px;">
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Valor total (R$)</label>
+                    <input type="number" name="valor" step="0.01" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Bandeira</label>
+                    <select name="bandeira" class="form-select">
+                        <option value="Visa/Master">Visa/Master</option>
+                        <option value="Demais Bandeiras">Demais Bandeiras</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Forma de pagamento</label>
+                    <select name="forma_pagamento" class="form-select">
+                        {% for forma in formas_pagamento %}
+                            <option value="{{ forma }}">{{ forma }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Calcular</button>
+                </div>
+            </form>
+            {% if resultado is not none %}
+                <div class="alert alert-success mt-4 text-center">
+                    <h5>Você receberá: <strong>R$ {{ resultado }}</strong></h5>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>
 """
@@ -65,6 +82,10 @@ def index():
         resultado = round(valor_total * (1 - taxa / 100), 2)
 
     return render_template_string(HTML_TEMPLATE, resultado=resultado, formas_pagamento=TAXAS.keys())
+
+@app.route('/logo')
+def logo():
+    return send_from_directory('.', 'image.png')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
